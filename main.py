@@ -1,6 +1,7 @@
 #main execution
 import os
 import wandb
+import pandas as pd
 from dotenv import load_dotenv
 
 from data import load_data, prepare_data, create_datasets, sample_data
@@ -9,6 +10,13 @@ from train import setup_wandb, train_model, save_model_locally
 from eval import evaluate_model, compute_classification_report, save_evaluation_results, log_to_wandb, print_evaluation_summary
 
 load_dotenv()
+
+# Optional wandb login - only if API key is provided
+wandb_api_key = os.getenv('WANDB_API_KEY')
+if wandb_api_key:
+    wandb.login(key=wandb_api_key)
+else:
+    print("Warning: WANDB_API_KEY not found in environment. Weights & Biases logging disabled.")
 
 
 def main():
