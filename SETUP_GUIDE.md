@@ -166,7 +166,7 @@ Expected metrics (will vary by dataset):
 
 If you set HF_TOKEN and HF_USERNAME, model automatically pushes to:
 ```
-https://huggingface.co/your-username/distilbert-goodreads-genres
+https://huggingface.co/your-username/mlops-assignment2-distilbert
 ```
 
 You can load it later:
@@ -175,7 +175,7 @@ from transformers import pipeline
 
 pipe = pipeline(
     'text-classification',
-    model='your-username/distilbert-goodreads-genres'
+    model='your-username/mlops-assignment2-distilbert'
 )
 
 print(pipe('I loved this book!'))

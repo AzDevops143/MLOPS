@@ -229,7 +229,7 @@ If `HF_TOKEN` and `HF_USERNAME` are configured, the pipeline can push the traine
 Example publish URL:
 
 ```text
-https://huggingface.co/YOUR_USERNAME/distilbert-goodreads-genres
+https://huggingface.co/YOUR_USERNAME/mlops-assignment2-distilbert
 ```
 
 Load the published model with:
@@ -238,7 +238,7 @@ Load the published model with:
 from transformers import pipeline
 pipe = pipeline(
     'text-classification',
-    model='YOUR_USERNAME/distilbert-goodreads-genres'
+    model='YOUR_USERNAME/mlops-assignment2-distilbert'
 )
 print(pipe('I loved this book!'))
 ```
@@ -298,5 +298,5 @@ Start by reading `main.py` and then follow the data and training flow in the oth
 ## 🔗 Useful links
 
 - GitHub repository: https://github.com/AzDevops143/MLOPS
-- Hugging Face model: https://huggingface.co/<your-username>/distilbert-goodreads-genres
+- Hugging Face model: https://huggingface.co/<your-username>/mlops-assignment2-distilbert
 - W&B project: https://wandb.ai/<your-username>/mlops-assignment2

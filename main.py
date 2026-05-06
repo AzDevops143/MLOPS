@@ -126,7 +126,7 @@ def main():
             try:
                 from huggingface_hub import login
                 login(token=hf_token)
-                model_repo = 'distilbert-goodreads-genres'
+                model_repo = 'mlops-assignment2-distilbert'
                 model.push_to_hub(model_repo)
                 tokenizer.push_to_hub(model_repo)
                 hf_url = f"https://huggingface.co/{os.getenv('HF_USERNAME', 'username')}/{model_repo}"
