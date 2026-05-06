@@ -42,8 +42,8 @@ project/
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/your-username/Myapp.git
-cd Myapp
+git clone https://github.com/AzDevops143/MLOPS.git
+cd MLOPS
 ```
 
 ### 2. Create Environment Variables
@@ -108,7 +108,26 @@ docker run --rm --gpus all \
   -e HF_USERNAME="your_username" \
   mlops-assignment
 ```
+## GitHub Actions
+This repository includes a GitHub Actions workflow at `.github/workflows/pipeline.yml`.
 
+### When the workflow runs
+- `lint-and-test` runs on every push and pull request
+- `build-and-push-docker` runs on every push/pull request
+- `train-and-evaluate` runs only when triggered manually or when a commit message contains `[train]`
+
+### Manual training trigger
+1. Go to GitHub → Actions → `MLOps Pipeline`
+2. Click `Run workflow`
+3. Set `run_training` to `true`
+4. Click `Run workflow`
+
+### Commit-triggered training
+Use a commit message such as:
+```bash
+git commit -m "Add model improvements [train]"
+git push origin main
+```
 ## Configuration
 
 Edit the `CONFIG` dictionary in `main.py` to customize:
@@ -245,4 +264,4 @@ DistilBERT was chosen because:
 
 - Hugging Face Model: https://huggingface.co/your-username/distilbert-goodreads-genres
 - W&B Project: https://wandb.ai/your-username/mlops-assignment2
-- GitHub Repository: https://github.com/your-username/Myapp
+- GitHub Repository: https://github.com/AzDevops143/MLOPS
