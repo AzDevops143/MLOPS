@@ -1,0 +1,169 @@
+name: MLOps Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      run_training:
+        description: 'Run full training pipeline'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run basic syntax check
+      run: python -m py_compile main.py data.py train.py eval.py utils.py
+
+    - name: Check data loading (without training)
+      run: |
+        python -c "
+        from data import load_data
+        df = load_data('data.csv')
+        print(f'Data loaded successfully: {len(df)} samples')
+        print(f'Columns: {list(df.columns)}')
+        "
+
+  train-and-evaluate:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_training == 'true' || github.event_name == 'push' && contains(github.event.head_commit.message, '[train]')
+    needs: lint-and-test
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Login to Weights & Biases
+      run: |
+        if [ -n "$WANDB_API_KEY" ]; then
+          pip install wandb
+          wandb login $WANDB_API_KEY
+        else
+          echo "WANDB_API_KEY not set, skipping W&B login"
+        fi
+      env:
+        WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+
+    - name: Run training pipeline with reduced epochs
+      run: |
+        # Modify config for CI - reduce epochs and samples for faster execution
+        python -c "
+        import os
+        import main
+        # Override config for CI
+        main.CONFIG['num_epochs'] = 1
+        main.CONFIG['samples_per_label'] = 50  # Limit samples for CI
+        main.main()
+        "
+      env:
+        WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        HF_USERNAME: ${{ secrets.HF_USERNAME }}
+
+    - name: Upload training artifacts
+      uses: actions/upload-artifact@v3
+      if: success()
+      with:
+        name: training-results
+        path: |
+          results/
+          model/
+        retention-days: 30
+
+  build-and-push-docker:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [lint-and-test, build-and-push-docker]
+    environment: production
+    steps:
+    - name: Deploy to production
+      run: |
+        echo "Deployment step - add your deployment logic here"
+        echo "For example: trigger deployment webhook, update infrastructure, etc."
+        # Add actual deployment commands here
