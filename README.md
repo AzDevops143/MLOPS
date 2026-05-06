@@ -150,11 +150,11 @@ CONFIG = {
 
 | Metric | Score |
 |--------|-------|
-| Accuracy | 0.XX |
-| F1 Score | 0.XX |
-| Eval Loss | 0.XX |
+| Accuracy | 0.4000 |
+| F1 Score | 0.2333 |
+| Eval Loss | 1.5978 |
 
-Replace with your actual results after training.
+These results were obtained from a short local training run on the supplied `data.csv` dataset.
 
 ## Tracking Experiments
 
