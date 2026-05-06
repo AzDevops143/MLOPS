@@ -1,55 +1,68 @@
-# MLOps Assignment 2: Hugging Face Fine-Tuning & Model Deployment
+# MLOps Assignment 2: DistilBERT Fine-Tuning Pipeline
 
-A complete MLOps pipeline for text classification using DistilBERT, with experiment tracking via Weights & Biases, Docker containerization, and GitHub Actions automation.
+This repository contains an end-to-end MLOps pipeline for text classification using a Hugging Face DistilBERT model. The pipeline includes data preparation, training, evaluation, Weights & Biases tracking, Docker support, and GitHub Actions automation.
 
-## What this project does
+---
 
-- Loads and preprocesses the dataset from `data.csv`
-- Fine-tunes a Hugging Face DistilBERT model for genre classification
-- Logs metrics and artifacts to Weights & Biases
-- Evaluates the model on a test split and saves results locally
-- Supports Docker execution and GitHub Actions CI/CD
+## 🚀 Project overview
 
-## Project structure
+The project is designed to teach the full lifecycle of an MLOps workflow:
 
-```
+- **Load and preprocess** a dataset from `data.csv`
+- **Fine-tune** a transformer model (`distilbert-base-cased`) for genre classification
+- **Evaluate** the model using accuracy, F1 score, and loss
+- **Track experiments** with Weights & Biases
+- **Save and publish** the trained model
+- **Automate** CI/CD with GitHub Actions
+
+---
+
+## 📁 Repository structure
+
+```text
 MLOPS/
-├── main.py                  # Pipeline orchestration and execution
-├── data.py                  # Data loading, sampling, and splitting
-├── train.py                 # Training loop using Hugging Face Trainer
-├── eval.py                  # Evaluation, metrics, and result saving
-├── utils.py                 # Tokenizer/model loading and helper utilities
+├── main.py                  # Pipeline orchestrator
+├── data.py                  # Data loading and preprocessing
+├── train.py                 # Model training and W&B setup
+├── eval.py                   # Evaluation and results logging
+├── utils.py                 # Utility functions and helpers
 ├── requirements.txt         # Python dependencies
-├── Dockerfile               # Docker image definition
+├── Dockerfile               # Container build configuration
 ├── .env.example             # Environment variable template
 ├── README.md                # Project documentation
 ├── data.csv                 # Sample dataset used for training
 └── .github/workflows/
-    └── pipeline.yml        # GitHub Actions workflow
+    └── pipeline.yml        # CI/CD workflow
 ```
 
-## Prerequisites
+---
 
-- Python 3.9+
+## ✅ Prerequisites
+
+- Python 3.9 or newer
 - Git
 - Hugging Face account: https://huggingface.co
 - Weights & Biases account: https://wandb.ai
 - Optional: GPU for faster training
 
-## Quick setup
+---
 
-### 1. Clone the repository
+## 🛠️ Setup instructions
+
+### 1. Clone the repo
+
 ```bash
 git clone https://github.com/AzDevops143/MLOPS.git
 cd MLOPS
 ```
 
-### 2. Configure environment variables
+### 2. Create your environment file
+
 ```bash
 cp .env.example .env
 ```
 
-Update `.env` with your own keys:
+Open `.env` and fill in your credentials:
 
 ```ini
 WANDB_API_KEY=your_wandb_api_key
@@ -57,40 +70,51 @@ HF_TOKEN=your_huggingface_token
 HF_USERNAME=your_huggingface_username
 ```
 
+> `HF_USERNAME` is your Hugging Face profile name, e.g. `srajam696`.
+
 ### 3. Install dependencies
 
 For CPU:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 For GPU with CUDA 11.8:
+
 ```bash
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 pip install -r requirements.txt
 ```
 
-## Running the pipeline locally
+---
+
+## ▶️ Run the pipeline locally
 
 ```bash
 python main.py
 ```
 
-This will:
+This command will:
+
 - load `data.csv`
-- split it into train/test sets
+- split data into training and testing sets
 - fine-tune DistilBERT
-- evaluate on the test set
-- save the model and evaluation outputs
+- evaluate the model
+- save evaluation results and the trained model
 
-## Running with Docker
+---
 
-Build the image:
+## 🐳 Run with Docker
+
+Build the Docker image:
+
 ```bash
 docker build -t mlops-assignment .
 ```
 
 Run the container:
+
 ```bash
 docker run --rm \
   -e WANDB_API_KEY="your_key" \
@@ -99,7 +123,8 @@ docker run --rm \
   mlops-assignment
 ```
 
-With GPU support:
+If you have GPU support:
+
 ```bash
 docker run --rm --gpus all \
   -e WANDB_API_KEY="your_key" \
@@ -108,32 +133,37 @@ docker run --rm --gpus all \
   mlops-assignment
 ```
 
-## GitHub Actions workflow
+---
 
-The repository includes `.github/workflows/pipeline.yml`.
+## 🧪 GitHub Actions workflow
 
-### What runs automatically
-- `lint-and-test` on every push and pull request
-- `build-and-push-docker` on every push and pull request
+This repo includes a GitHub Actions workflow in `.github/workflows/pipeline.yml`.
 
-### What runs only when requested
-- `train-and-evaluate` when triggered manually or when a commit message contains `[train]`
+### Automatic jobs
+- `lint-and-test` runs on every push and pull request
+- `build-and-push-docker` runs on every push and pull request
 
-### Manual trigger
-1. Open GitHub Actions for the repo
+### Conditional job
+- `train-and-evaluate` runs only when manually triggered or when a commit message contains `[train]`
+
+### Manually trigger training
+1. Go to GitHub Actions in the repo
 2. Select `MLOps Pipeline`
 3. Click `Run workflow`
 4. Set `run_training` to `true`
 
 ### Commit-triggered training
+
 ```bash
-git commit -m "Improve model [train]"
+git commit -m "Improve training [train]"
 git push origin main
 ```
 
-## Configuring the pipeline
+---
 
-Edit the `CONFIG` dictionary in `main.py` to change behavior:
+## ⚙️ Configuration
+
+The pipeline is driven by the `CONFIG` dictionary in `main.py`.
 
 ```python
 CONFIG = {
@@ -154,12 +184,16 @@ CONFIG = {
 }
 ```
 
-- `samples_per_label`: set a small number for faster experiments
-- `test_size`: controls the train/test split
-- `output_dir`: where training checkpoints and logs are stored
-- `model_output_dir`: where the final model is saved
+### Helpful tuning tips
 
-## Actual results
+- `samples_per_label`: set to a small number for fast experiments
+- `test_size`: controls the size of the evaluation split
+- `output_dir`: stores checkpoints and logs
+- `model_output_dir`: stores the final saved model
+
+---
+
+## 📊 Results from a sample run
 
 | Metric | Score |
 |--------|-------|
@@ -167,33 +201,39 @@ CONFIG = {
 | F1 Score | 0.2333 |
 | Eval Loss | 1.5978 |
 
-> These metrics were produced in a quick local run on the included `data.csv` dataset. Training on a larger dataset or with more epochs will change results.
+> These values were generated from a quick local execution using the sample `data.csv`. Larger datasets and longer training will produce different results.
 
-## Experiment tracking
+---
+
+## 📌 Experiment tracking
 
 ### Weights & Biases
 The project logs:
+
 - training loss
 - validation loss
-- accuracy and F1 score
+- accuracy
+- F1 score
 - hyperparameters
 - model artifacts
 
-If you want to view runs, set your own workspace and use the W&B dashboard.
+### Local output
+After evaluation, results are saved to `eval_results.json`, including the classification report.
 
-### Local evaluation output
-After evaluation, the project saves `eval_results.json` containing metrics and the classification report.
+---
 
-## Hugging Face model publishing
+## 📦 Hugging Face publishing
 
-If `HF_TOKEN` and `HF_USERNAME` are set, the pipeline can push the trained model to the Hugging Face Hub under your account.
+If `HF_TOKEN` and `HF_USERNAME` are configured, the pipeline can push the trained model to the Hugging Face Hub under your account.
 
-For example, if your Hugging Face username is `YOUR_USERNAME`, the model will be published to:
+Example publish URL:
+
 ```text
 https://huggingface.co/YOUR_USERNAME/distilbert-goodreads-genres
 ```
 
-Use the same account name when loading the model:
+Load the published model with:
+
 ```python
 from transformers import pipeline
 pipe = pipeline(
@@ -203,21 +243,24 @@ pipe = pipeline(
 print(pipe('I loved this book!'))
 ```
 
-If you do not yet have a Hugging Face account or token, create one at https://huggingface.co and add the values to your `.env` file or GitHub Actions secrets:
+If you do not yet have a Hugging Face account, create one at https://huggingface.co and then update `.env`:
+
 ```ini
 HF_USERNAME=YOUR_USERNAME
 HF_TOKEN=your_huggingface_token
 ```
 
-## Troubleshooting
+---
+
+## 🛠️ Troubleshooting
 
 ### Common issues
 
-- **`data.csv` not found**: make sure it is in the repo root and contains `review` and `genre` columns.
-- **W&B not logging**: verify `WANDB_API_KEY` is set in `.env` or in your environment.
-- **CUDA memory errors**: lower `batch_size` and `max_length` in `main.py`.
+- `data.csv` not found: verify the file exists in the repository root and includes `review` and `genre` columns.
+- W&B not logging: confirm `WANDB_API_KEY` is set correctly.
+- CUDA memory errors: reduce `batch_size` and `max_length` in `main.py`.
 
-### Helpful commands
+### Check environment values
 
 ```bash
 echo $WANDB_API_KEY
@@ -225,26 +268,34 @@ echo $HF_TOKEN
 echo $HF_USERNAME
 ```
 
-## Why this model?
+---
 
-DistilBERT is chosen for this assignment because it is:
+## 💡 Why DistilBERT?
+
+DistilBERT is a great choice for this assignment because it is:
+
 - smaller and faster than full BERT
-- well-suited for fine-tuning on text classification
-- easy to deploy and experiment with
+- easier to fine-tune on moderate datasets
+- efficient for model deployment
+- well-supported by Hugging Face
 
-## Notes for students
+---
 
-This repo is designed to show how an MLOps pipeline works end to end:
-- data preprocessing
-- model fine-tuning
-- evaluation and reporting
-- experiment tracking
-- containerization
-- automated workflows
+## 🎓 For students
 
-To understand the code, start with `main.py`, then read `data.py`, `train.py`, and `eval.py`.
+This repository is built to help you understand how a real MLOps pipeline works:
 
-## Links
+1. `main.py` orchestrates the workflow
+2. `data.py` prepares the dataset
+3. `train.py` executes training
+4. `eval.py` validates and saves results
+5. `utils.py` contains reusable helpers
+
+Start by reading `main.py` and then follow the data and training flow in the other scripts.
+
+---
+
+## 🔗 Useful links
 
 - GitHub repository: https://github.com/AzDevops143/MLOPS
 - Hugging Face model: https://huggingface.co/<your-username>/distilbert-goodreads-genres
