@@ -186,18 +186,27 @@ After evaluation, the project saves `eval_results.json` containing metrics and t
 
 ## Hugging Face model publishing
 
-If `HF_TOKEN` and `HF_USERNAME` are set, the script can push the trained model to the Hugging Face Hub.
+If `HF_TOKEN` and `HF_USERNAME` are set, the pipeline can push the trained model to the Hugging Face Hub under your account.
 
-Example repository path:
+For example, if your Hugging Face username is `YOUR_USERNAME`, the model will be published to:
 ```text
-https://huggingface.co/<your-username>/distilbert-goodreads-genres
+https://huggingface.co/YOUR_USERNAME/distilbert-goodreads-genres
 ```
 
-Load a published model:
+Use the same account name when loading the model:
 ```python
 from transformers import pipeline
-pipe = pipeline('text-classification', model='your-username/distilbert-goodreads-genres')
+pipe = pipeline(
+    'text-classification',
+    model='YOUR_USERNAME/distilbert-goodreads-genres'
+)
 print(pipe('I loved this book!'))
+```
+
+If you do not yet have a Hugging Face account or token, create one at https://huggingface.co and add the values to your `.env` file or GitHub Actions secrets:
+```ini
+HF_USERNAME=YOUR_USERNAME
+HF_TOKEN=your_huggingface_token
 ```
 
 ## Troubleshooting
@@ -238,5 +247,5 @@ To understand the code, start with `main.py`, then read `data.py`, `train.py`, a
 ## Links
 
 - GitHub repository: https://github.com/AzDevops143/MLOPS
-- Hugging Face model: https://huggingface.co/your-username/distilbert-goodreads-genres
-- W&B project: https://wandb.ai/your-username/mlops-assignment2
+- Hugging Face model: https://huggingface.co/<your-username>/distilbert-goodreads-genres
+- W&B project: https://wandb.ai/<your-username>/mlops-assignment2
