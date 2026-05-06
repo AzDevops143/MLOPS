@@ -7,19 +7,20 @@ import os
 def setup_wandb(project_name, run_name, model_name, hyperparameters):
     """Initialize Weights & Biases for experiment tracking"""
     
-    wandb_api_key = get_env_variable('WANDB_API_KEY', None)
+    wandb_api_key = os.getenv('WANDB_API_KEY')
     
     if wandb_api_key:
         wandb.login(key=wandb_api_key)
-    
-    wandb.init(
-        project=project_name,
-        name=run_name,
-        config={
-            'model': model_name,
-            **hyperparameters
-        }
-    )
+        wandb.init(
+            project=project_name,
+            name=run_name,
+            config={
+                'model': model_name,
+                **hyperparameters
+            }
+        )
+    else:
+        print("Warning: WANDB_API_KEY not set. Skipping W&B initialization.")
 
 
 def train_model(model, train_dataset, test_dataset, output_dir='./results', 
@@ -44,6 +45,9 @@ def train_model(model, train_dataset, test_dataset, output_dir='./results',
         training_result: Training results
     """
     
+    # Check if W&B is available
+    wandb_available = bool(os.getenv('WANDB_API_KEY'))
+    
     training_args = TrainingArguments(
         output_dir=output_dir,
         num_train_epochs=num_epochs,
@@ -55,7 +59,7 @@ def train_model(model, train_dataset, test_dataset, output_dir='./results',
         eval_strategy='epoch',
         save_strategy='epoch',
         load_best_model_at_end=True,
-        report_to='wandb',
+        report_to='wandb' if wandb_available else [],
         run_name='bert-fine-tuning',
         learning_rate=learning_rate,
         seed=42
