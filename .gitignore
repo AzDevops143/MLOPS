@@ -1,0 +1,45 @@
+# Environment
+.env
+.venv
+env/
+venv/
+*.pyc
+__pycache__/
+.DS_Store
+
+# Data files
+*.csv
+*.json
+data/
+*.xlsx
+
+# Model files
+model/
+results/
+checkpoint-*/
+*.bin
+*.pt
+
+# W&B
+wandb/
+*.wandb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Credentials
+.env.local
+secrets.json
