@@ -73,9 +73,12 @@ def create_datasets(train_texts, train_labels, test_texts, test_labels,
 
 def sample_data(df, samples_per_label=None):
     """Sample data for faster iteration during development"""
-    if samples_per_label:
-        sampled_df = df.groupby(df.columns[-1]).apply(
-            lambda x: x.sample(min(len(x), samples_per_label), random_state=42)
-        ).reset_index(drop=True)
-        return sampled_df
-    return df
+    if samples_per_label is None:
+        return df
+    
+    sampled_df = pd.concat([
+        group.sample(min(len(group), samples_per_label), random_state=42)
+        for name, group in df.groupby('genre')
+    ]).reset_index(drop=True)
+    
+    return sampled_df
