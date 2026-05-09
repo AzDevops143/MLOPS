@@ -60,7 +60,7 @@ jobs:
 
   train-and-evaluate:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_training == 'true' || github.event_name == 'push' && contains(github.event.head_commit.message, '[train]')
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_training == 'true' || github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'push' && contains(github.event.head_commit.message, '[train]')
     needs: lint-and-test
     steps:
     - name: Checkout code
@@ -96,20 +96,14 @@ jobs:
         WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
 
     - name: Run training pipeline with reduced epochs
-      run: |
-        # Modify config for CI - reduce epochs and samples for faster execution
-        python -c "
-        import os
-        import main
-        # Override config for CI
-        main.CONFIG['num_epochs'] = 1
-        main.CONFIG['samples_per_label'] = 50  # Limit samples for CI
-        main.main()
-        "
       env:
         WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         HF_TOKEN: ${{ secrets.HF_TOKEN }}
         HF_USERNAME: ${{ secrets.HF_USERNAME }}
+        CI_NUM_EPOCHS: 1
+        CI_SAMPLES_PER_LABEL: 50
+      run: |
+        python main.py
 
     - name: Upload training artifacts
       uses: actions/upload-artifact@v3
@@ -160,7 +154,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [lint-and-test, build-and-push-docker]
+    needs: [lint-and-test, train-and-evaluate, build-and-push-docker]
     environment: production
     steps:
     - name: Deploy to production

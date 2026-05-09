@@ -11,6 +11,23 @@ from eval import evaluate_model, compute_classification_report, save_evaluation_
 
 load_dotenv()
 
+CONFIG = {
+    'data_file': 'data.csv',
+    'text_column': 'review',
+    'label_column': 'genre',
+    'model_name': 'distilbert-base-cased',
+    'num_epochs': 3,
+    'batch_size': 16,
+    'learning_rate': 3e-5,
+    'max_length': 512,
+    'warmup_steps': 100,
+    'logging_steps': 50,
+    'samples_per_label': None,
+    'test_size': 0.2,
+    'output_dir': './results',
+    'model_output_dir': './model'
+}
+
 # Optional wandb login - only if API key is provided
 wandb_api_key = os.getenv('WANDB_API_KEY')
 if wandb_api_key:
@@ -22,52 +39,46 @@ else:
 def main():
     """Main pipeline orchestrator"""
     
+    config = CONFIG.copy()
+    ci_num_epochs = os.getenv('CI_NUM_EPOCHS')
+    ci_samples_per_label = os.getenv('CI_SAMPLES_PER_LABEL')
+
+    if ci_num_epochs:
+        config['num_epochs'] = int(ci_num_epochs)
+        print(f"CI override: num_epochs={config['num_epochs']}")
+    if ci_samples_per_label:
+        config['samples_per_label'] = int(ci_samples_per_label)
+        print(f"CI override: samples_per_label={config['samples_per_label']}")
+
     print("Starting MLOps Assignment 2 Pipeline...")
     print(f"Using device: {DEVICE}")
     
-    CONFIG = {
-        'data_file': 'data.csv',
-        'text_column': 'review',
-        'label_column': 'genre',
-        'model_name': 'distilbert-base-cased',
-        'num_epochs': 3,
-        'batch_size': 16,
-        'learning_rate': 3e-5,
-        'max_length': 512,
-        'warmup_steps': 100,
-        'logging_steps': 50,
-        'samples_per_label': None,
-        'test_size': 0.2,
-        'output_dir': './results',
-        'model_output_dir': './model'
-    }
-    
     try:
         print("\n1. Loading data...")
-        df = load_data(CONFIG['data_file'])
+        df = load_data(config['data_file'])
         print(f"Loaded {len(df)} samples")
         
-        if CONFIG['samples_per_label']:
-            print(f"Sampling {CONFIG['samples_per_label']} samples per label...")
-            df = sample_data(df, CONFIG['samples_per_label'])
+        if config['samples_per_label']:
+            print(f"Sampling {config['samples_per_label']} samples per label...")
+            df = sample_data(df, config['samples_per_label'])
         
         print("\n2. Preparing data...")
         train_texts, train_labels, test_texts, test_labels, label2id, id2label = prepare_data(
             df,
-            CONFIG['text_column'],
-            CONFIG['label_column'],
-            test_size=CONFIG['test_size']
+            config['text_column'],
+            config['label_column'],
+            test_size=config['test_size']
         )
         print(f"Train samples: {len(train_texts)}, Test samples: {len(test_texts)}")
         print(f"Labels: {id2label}")
         
         print("\n3. Loading tokenizer and model...")
         tokenizer, model = load_tokenizer_and_model(
-            CONFIG['model_name'],
+            config['model_name'],
             num_labels=len(label2id),
             device=DEVICE
         )
-        print(f"Loaded {CONFIG['model_name']} with {len(label2id)} labels")
+        print(f"Loaded {config['model_name']} with {len(label2id)} labels")
         
         print("\n4. Creating datasets...")
         train_dataset, test_dataset = create_datasets(
@@ -76,7 +87,7 @@ def main():
             test_texts,
             test_labels,
             tokenizer,
-            max_length=CONFIG['max_length']
+            max_length=config['max_length']
         )
         print(f"Datasets created successfully")
         
@@ -84,13 +95,13 @@ def main():
         setup_wandb(
             project_name='mlops-assignment2',
             run_name='distilbert-fine-tuning',
-            model_name=CONFIG['model_name'],
+            model_name=config['model_name'],
             hyperparameters={
-                'epochs': CONFIG['num_epochs'],
-                'batch_size': CONFIG['batch_size'],
-                'learning_rate': CONFIG['learning_rate'],
-                'max_length': CONFIG['max_length'],
-                'model': CONFIG['model_name']
+                'epochs': config['num_epochs'],
+                'batch_size': config['batch_size'],
+                'learning_rate': config['learning_rate'],
+                'max_length': config['max_length'],
+                'model': config['model_name']
             }
         )
         
@@ -99,12 +110,12 @@ def main():
             model=model,
             train_dataset=train_dataset,
             test_dataset=test_dataset,
-            output_dir=CONFIG['output_dir'],
-            num_epochs=CONFIG['num_epochs'],
-            batch_size=CONFIG['batch_size'],
-            learning_rate=CONFIG['learning_rate'],
-            warmup_steps=CONFIG['warmup_steps'],
-            logging_steps=CONFIG['logging_steps']
+            output_dir=config['output_dir'],
+            num_epochs=config['num_epochs'],
+            batch_size=config['batch_size'],
+            learning_rate=config['learning_rate'],
+            warmup_steps=config['warmup_steps'],
+            logging_steps=config['logging_steps']
         )
         print("Training completed")
         
@@ -118,7 +129,7 @@ def main():
         log_to_wandb(eval_results, report, results_file)
         
         print("\n9. Saving model locally...")
-        save_model_locally(model, tokenizer, CONFIG['model_output_dir'])
+        save_model_locally(model, tokenizer, config['model_output_dir'])
         
         print("\n10. Pushing to Hugging Face Hub...")
         hf_token = get_env_variable('HF_TOKEN', None)
